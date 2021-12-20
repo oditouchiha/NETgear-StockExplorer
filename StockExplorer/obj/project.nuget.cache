@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "dgSpecHash": "cGRc6U3NYJgWd/oiSMNGnKsfUA90p59otI33po2KQcjFoo27YQ02KbKiLc8w+OXtUA4EbsnJkgRjXijOosF3oA==",
+  "success": true,
+  "projectFilePath": "E:\\DITO\\VS Sources\\StockExplorer\\StockExplorer\\StockExplorer.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\DITO\\.nuget\\packages\\aspose.cells\\19.10.0\\aspose.cells.19.10.0.nupkg.sha512",
+    "C:\\Users\\DITO\\.nuget\\packages\\microsoft.netcore.platforms\\2.0.0\\microsoft.netcore.platforms.2.0.0.nupkg.sha512",
+    "C:\\Users\\DITO\\.nuget\\packages\\microsoft.win32.systemevents\\4.5.0\\microsoft.win32.systemevents.4.5.0.nupkg.sha512",
+    "C:\\Users\\DITO\\.nuget\\packages\\npgsql\\6.0.0\\npgsql.6.0.0.nupkg.sha512",
+    "C:\\Users\\DITO\\.nuget\\packages\\system.diagnostics.diagnosticsource\\6.0.0\\system.diagnostics.diagnosticsource.6.0.0.nupkg.sha512",
+    "C:\\Users\\DITO\\.nuget\\packages\\system.drawing.common\\4.5.1\\system.drawing.common.4.5.1.nupkg.sha512",
+    "C:\\Users\\DITO\\.nuget\\packages\\system.memory\\4.5.4\\system.memory.4.5.4.nupkg.sha512",
+    "C:\\Users\\DITO\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\6.0.0\\system.runtime.compilerservices.unsafe.6.0.0.nupkg.sha512",
+    "C:\\Users\\DITO\\.nuget\\packages\\system.text.encoding.codepages\\4.4.0\\system.text.encoding.codepages.4.4.0.nupkg.sha512"
+  ],
+  "logs": []
+}

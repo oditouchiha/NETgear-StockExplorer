@@ -165,12 +165,37 @@ namespace StockExporter
                 dbpass = "kelekmambu^&*";
             }
 
-            string[] field_list = { "item_id", "task_id", "task_id_origin", "wh_id", "site_id", "site_id_origin", "vendor", "division", "project", "sourcenya", "kd_acs", "ne_id", "flag_waste", "locator_id", "pnx_unit_category", "pnx_equipment_type", "pnx_major_eqp", "wh_serial_num", "condition", "remark_condition", "inbound_qty", "outbound_qty", "avl_qty", "pnx_manufacturing", "pnx_eqp_category", "unit_of_measurement", "reuse_matrix", "status", "inbound_date" };
-            string[] header_list = { "item_id", "Task Destination", "Task Origin", "warehouse ID", "site_id_destination", "site_id_Origin", "Vendor", "Division", "Project Name", "Ref Data", "code catalog", "NE ID", "flag_waste", "Locator", "Part Number", "Description", "Sub System", "Serial Number", "condition", "remark condition", "inbound_qty", "outbound_qty", "avl_qty", "Brand", "Equipment Type", "UoM", "Reuse Matrix", "Task Status", "Inbound Date" };
+            // ==================================
+            //          EXPORT STOCK
+            // ==================================
+
+            string[] field_list;
+            string[] header_list;
+
+            field_list = new string[] { 
+                "item_no","item_id", "task_id", "task_id_origin", "wh_id", 
+                "site_id", "site_id_origin", "site_name_origin", "vendor", "division", 
+                "project", "sourcenya", "kd_acs", "ne_id", 
+                "flag_waste", "location", "pallet_id", "pnx_unit_category", "pnx_equipment_type", 
+                "pnx_major_eqp", "wh_serial_num", "condition", "remark_condition", 
+                "inbound_qty", "outbound_qty", "avl_qty", "pnx_manufacturing", 
+                "pnx_eqp_category", "unit_of_measurement", "reuse_matrix", "status", 
+                "inbound_date" 
+            };
+            header_list = new string[]{ 
+                "No", "ITEM ID","Task Destination", "Task Origin", "warehouse ID", 
+                "SITE ID DESTINATION", "Site ID Origin", "Site Name Origin", "Vendor", "Division", 
+                "Project Name", "Ref Data", "code catalog", "NE ID", 
+                "FLAG_WASTE", "Locator", "Pallet_ID","Part Number", "Description", 
+                "Sub System", "Serial Number", "condition", "remark condition", 
+                "inbound_qty", "outbound_qty", "avl_qty", "Brand", 
+                "Equipment Type", "UoM", "Reuse Matrix", "Task Status", 
+                "Inbound Date" 
+            };
             var connection = new NpgsqlConnection("User ID=postgres;Password=" + dbpass + ";Host=" + dbhost + ";Database=pm_mobile_new;Port=5432;Timeout=300;CommandTimeout=300");
             connection.Open();
 
-            Console.WriteLine("Start " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            Console.WriteLine("Start Stock Export " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
             //string fpath = "/Users/tbamir/Downloads/";
 
@@ -193,72 +218,73 @@ namespace StockExporter
             {
                 int baris = 1;
 
-                for (int iloop = 0; iloop < 2; iloop++)
+                string tbl = "mr_stock";
+                string msql = "select * from " + tbl;
+                command.CommandText = msql;
+
+                using (NpgsqlDataReader reader = command.ExecuteReader())
                 {
-                    string tbl = "tmp_tbl_item_2";
-                    if (iloop == 1) tbl = "tmp_tbl_item_3";
-                    string msql = "select * from " + tbl;
-                    command.CommandText = msql;
-
-                    using (NpgsqlDataReader reader = command.ExecuteReader())
+                    while (reader.Read())
                     {
-                        while (reader.Read())
+                        for (int ix = 0; ix < field_list.Length; ix++)
                         {
-                            for (int i = 0; i < field_list.Length; i++)
+                            int kolom = ix;// + 1;
+
+                            Cell cell = sheet.Cells[baris, kolom];
+
+                            string field = field_list[ix];
+                            string fna = field;
+
+                            if(fna=="item_no")
                             {
+                                cell.PutValue(Convert.ToInt64(baris));
+                                continue;
+                            }
 
-                                int kolom = i;// + 1;
+                            string ftype = reader.GetDataTypeName(reader.GetOrdinal(field));
+                            string value = "";
 
+                            if (ftype == "integer")
+                            {
+                                value = (reader.IsDBNull(reader.GetOrdinal(fna)) ? 0 : reader.GetInt64(reader.GetOrdinal(fna))).ToString();
+                            }
+                            else if (ftype.Contains("numeric"))
+                            {
+                                value = reader.IsDBNull(reader.GetOrdinal(fna)) ? "" : reader.GetDouble(reader.GetOrdinal(fna)).ToString();
+                            }
+                            else if (ftype.Contains("timestamp"))
+                            {
+                                value = reader.IsDBNull(reader.GetOrdinal(fna)) ? "" : reader.GetDateTime(reader.GetOrdinal(fna)).ToString("yyyy-MM-dd");
+                            }
+                            else
+                            {
+                                value = reader.IsDBNull(reader.GetOrdinal(fna)) ? "" : reader.GetString(reader.GetOrdinal(fna));
+                            }
 
-                                string field = field_list[i];
-                                string fna = field;
-                                string ftype = reader.GetDataTypeName(reader.GetOrdinal(field));
-                                string value = "";
-                                if (ftype == "integer")
+                            if (field.Contains("qty"))
+                            {
+                                //Style style = cell.GetStyle();
+                                //style.Custom = "#,##0.0000";
+                                //cell.SetStyle(style);
+                                cell.PutValue(Convert.ToInt64(value));
+                            }
+                            else
+                            {
+                                if (value != "")
                                 {
-                                    value = (reader.IsDBNull(reader.GetOrdinal(fna)) ? 0 : reader.GetInt64(reader.GetOrdinal(fna))).ToString();
-                                }
-                                else if (ftype.Contains("numeric"))
-                                {
-                                    value = reader.IsDBNull(reader.GetOrdinal(fna)) ? "" : reader.GetDouble(reader.GetOrdinal(fna)).ToString();
-                                }
-                                else if (ftype.Contains("timestamp"))
-                                {
-                                    value = reader.IsDBNull(reader.GetOrdinal(fna)) ? "" : reader.GetDateTime(reader.GetOrdinal(fna)).ToString("yyyy-MM-dd");
-                                }
-                                else
-                                {
-                                    value = reader.IsDBNull(reader.GetOrdinal(fna)) ? "" : reader.GetString(reader.GetOrdinal(fna));
-                                }
-
-                                if (field.Contains("qty"))
-                                {
-                                    Cell cell = sheet.Cells[baris, kolom];
-
                                     //Style style = cell.GetStyle();
                                     //style.Custom = "#,##0.0000";
                                     //cell.SetStyle(style);
-                                    cell.PutValue(Convert.ToInt64(value));
+                                    cell.PutValue(value.ToUpper().Trim());
                                 }
-                                else
-                                {
-                                    if (value != "")
-                                    {
-                                        Cell cell = sheet.Cells[baris, kolom];
+                            }
+                        }//for col
 
-                                        //Style style = cell.GetStyle();
-                                        //style.Custom = "#,##0.0000";
-                                        //cell.SetStyle(style);
-                                        cell.PutValue(value.ToUpper().Trim());
-                                    }
-                                }
-                            }//for col
-
-                            jmlrec = jmlrec + 1;
-                            baris = baris + 1;
-                        }//while reader.read
-                    }//using reader
-                }//                }//for(int iloop=0;iloop<2;iloop++)
+                        jmlrec = jmlrec + 1;
+                        baris = baris + 1;
+                    }//while reader.read
+                }//using reader
+                //                }//for(int iloop=0;iloop<2;iloop++)
             }//using command
 
             if (jmlrec > 0)
@@ -292,7 +318,339 @@ namespace StockExporter
 
             sheet.Dispose();
             wb.Dispose();
-            Console.WriteLine("End " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            Console.WriteLine("End Stock Export " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+
+            // ==================================
+            //          EXPORT INBOUND
+            // ==================================
+
+            field_list = new string[] {
+                "item_no","item_id", "task_id", "task_id_reference", "site_id",
+                "site_id_origin", "vendor", "division", "project", "approval_0_user_name",
+                "approval_1_user_name", "approval_2_user_name", "sourcenya", "kd_acs",
+                "ne_id", "flag_waste", "locator_id", "pnx_unit_category", "pnx_equipment_type",
+                "pnx_major_eqp", "wh_serial_num", "condition", "remark_condition",
+                "qty_waste", "site_id", "pnx_manufacturing", "pnx_eqp_category",
+                "unit_of_measurement", "reuse_matrix", "pnx_operation_status", "inbound_date",
+                "task_remarks","pnx_mgr_remark","approval_remark","on_hand_qty",
+                "in_transit_qty","allocated_qty","suspense_qty"
+            };
+            header_list = new string[] {
+                "NO","ITEM ID", "TASK DESTINATION", "TASK ORIGIN", "SITE ID DESTINATION",
+                "SITE ID ORIGIN", "VENDOR", "DIVISION", "PROJECT NAME", "APPROVAL 0 (VENDOR)",
+                "APPROVAL 1 (PM INDOSAT)", "APPROVAL 2 (AMG)", "REF DATA", "CODE CATALOG",
+                "NE ID", "FLAG_WASTE", "LOCATOR","PART NUMBER", "DESCRIPTION",
+                "SUB SYSTEM", "SERIAL NUMBER", "CONDITION", "REMARK CONDITION",
+                "QTY", "SITE ID DESTINATION", "BRAND", "EQUIPMENT TYPE",
+                "UOM", "REUSE MATRIX", "MATERIAL STATUS",
+                "INBOUND DATE","REMARK TASK","REMARK ITEM","REMARK APPROVAL",
+                "ON HAND QTY","IN TRANSIT QTY","ALLOCATED QTY","SUSPENSE QTY"
+            };
+
+            Console.WriteLine("Start Outbound Export " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+
+            //string fpath = "/Users/tbamir/Downloads/";
+
+            jmlrec = 0;
+            wb = new Workbook();
+            sheet = wb.Worksheets[0];
+
+            for (int i = 0; i < header_list.Length; i++)
+            {
+                int kolom = i;// + 1;
+                Cell cell = sheet.Cells[0, kolom];
+
+                //Style style = cell.GetStyle();
+                //style.Custom = "#,##0.0000";
+                //cell.SetStyle(style);
+                cell.PutValue(header_list[i].ToUpper());
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                int baris = 1;
+
+                string tbl = "mr_inbound_transaction";
+                string msql = "select * from " + tbl;
+                command.CommandText = msql;
+
+                using (NpgsqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        for (int i = 0; i < field_list.Length; i++)
+                        {
+
+                            int kolom = i;// + 1;
+
+                            string field = field_list[i];
+                            string fna = field;
+
+                            Cell cell = sheet.Cells[baris, kolom];
+                            if (fna == "item_no")
+                            {
+                                cell.PutValue(Convert.ToInt64(baris));
+                                continue;
+                            }
+
+                            string ftype = reader.GetDataTypeName(reader.GetOrdinal(field));
+                            string value = "";
+                            if (ftype == "integer")
+                            {
+                                value = (reader.IsDBNull(reader.GetOrdinal(fna)) ? 0 : reader.GetInt64(reader.GetOrdinal(fna))).ToString();
+                            }
+                            else if (ftype.Contains("numeric"))
+                            {
+                                value = reader.IsDBNull(reader.GetOrdinal(fna)) ? "" : reader.GetDouble(reader.GetOrdinal(fna)).ToString();
+                            }
+                            else if (ftype.Contains("timestamp"))
+                            {
+                                value = reader.IsDBNull(reader.GetOrdinal(fna)) ? "" : reader.GetDateTime(reader.GetOrdinal(fna)).ToString("yyyy-MM-dd");
+                            }
+                            else
+                            {
+                                value = reader.IsDBNull(reader.GetOrdinal(fna)) ? "" : reader.GetString(reader.GetOrdinal(fna));
+                            }
+
+                            if (field.Contains("qty"))
+                            {
+                                //Style style = cell.GetStyle();
+                                //style.Custom = "#,##0.0000";
+                                //cell.SetStyle(style);
+
+                                try
+                                {
+                                    cell.PutValue(Convert.ToInt64(value));
+                                }
+                                catch
+                                {
+                                    try
+                                    {
+                                        cell.PutValue(Convert.ToDouble(value));
+                                    }
+                                    catch
+                                    {
+                                        cell.PutValue(Convert.ToString(value));
+                                    }
+                                }
+                                
+                            }
+                            else
+                            {
+                                if (value != "")
+                                {
+                                    //Style style = cell.GetStyle();
+                                    //style.Custom = "#,##0.0000";
+                                    //cell.SetStyle(style);
+                                    cell.PutValue(value.ToUpper().Trim());
+                                }
+                            }
+                        }//for col
+
+                        jmlrec = jmlrec + 1;
+                        baris = baris + 1;
+                    }//while reader.read
+                }//using reader
+                //                }//for(int iloop=0;iloop<2;iloop++)
+            }//using command
+
+            if (jmlrec > 0)
+            {
+                string pdate = DateTime.Now.ToString("yyyyMMdd");
+                Random mnd = new Random();
+                string export_filename_temp = "";
+                int rnd = 0;
+                bool found = true;
+                while (found)
+                {
+                    rnd = mnd.Next(1000, 9999);
+                    export_filename_temp = "INBD_";
+                    export_filename_temp = pdate + "_" + export_filename_temp + "_temp" + rnd + ".xlsx";
+                    if (System.IO.File.Exists(temppath + export_filename_temp) == false)
+                    {
+                        found = false;
+                    }
+                }
+                Console.WriteLine("Save to Temporary " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                Console.WriteLine("Temp File : " + temppath + export_filename_temp);
+                wb.Save(temppath + export_filename_temp, Aspose.Cells.SaveFormat.Xlsx);
+                Console.WriteLine("Save to Temporary Success " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+
+                string export_filename_export = "inbound_" + pdate + ".xlsx";
+                Console.WriteLine("Export File : " + temppath + export_filename_export);
+                File.Copy(temppath + export_filename_temp, targetpath + export_filename_export, true);
+                Console.WriteLine("Save to Export Success " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+
+            }//jmlrec>0
+
+            sheet.Dispose();
+            wb.Dispose();
+            Console.WriteLine("End Outbound Export " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+
+            // ==================================
+            //          EXPORT OUTBOUND
+            // ==================================
+
+            field_list = new string[] {
+                "item_no","mr_no", "mr_status", "item_id",
+                "task_id", "task_id_destination", "site_id", "site_id_destination", "vendor",
+                "division", "project", "approval_0_user_name", "approval_1_user_name",
+                "approval_2_user_name", "sourcenya", "kd_acs", "ne_id", "flag_waste",
+                "locator_id", "pnx_unit_category", "pnx_equipment_type", "pnx_major_eqp",
+                "wh_serial_num", "condition", "remark_condition", "qty_waste",
+                "pnx_manufacturing", "pnx_eqp_category", "unit_of_measurement", "reuse_matrix",
+                "status","pnx_operation_status","inbound_date","in_transit_date",
+                "task_remarks","pnx_mgr_remark","approval_remark"
+            };
+            header_list = new string[] {
+                "NO", "MR NUMBER", "MR STATUS", "ITEM ID",
+                "TASK ORIGIN", "TASK DESTINATION", "SITE ID ORIGIN", "SITE ID DESTINATION", "VENDOR",
+                "DIVISION", "PROJECT NAME", "APPROVAL 0 (VENDOR)", "APPROVAL 1 (PM INDOSAT)",
+                "APPROVAL 2 (AMG)", "REF DATA", "CODE CATALOG","NE ID", "FLAG WASTE",
+                "LOCATOR", "PART NUMBER", "DESCRIPTION", "SUB SYSTEM",
+                "SERIAL NUMBER", "CONDITION", "REMARK CONDITION", "QTY",
+                "BRAND", "EQUIPMENT TYPE", "UOM", "REUSE MATRIX",
+                "TASK STATUS","MATERIAL STATUS","INBOUND DATE","IN TRANSIT DATE",
+                "REMARK TASK","REMARK ITEM","REMARK APPROVAL",
+            };
+
+            Console.WriteLine("Start Inbound Export " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+
+            //string fpath = "/Users/tbamir/Downloads/";
+
+            jmlrec = 0;
+            wb = new Workbook();
+            sheet = wb.Worksheets[0];
+
+            for (int i = 0; i < header_list.Length; i++)
+            {
+                int kolom = i;// + 1;
+                Cell cell = sheet.Cells[0, kolom];
+
+                //Style style = cell.GetStyle();
+                //style.Custom = "#,##0.0000";
+                //cell.SetStyle(style);
+                cell.PutValue(header_list[i].ToUpper());
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                int baris = 1;
+
+                string tbl = "mr_outbound_transaction";
+                string msql = "select * from " + tbl;
+                command.CommandText = msql;
+
+                using (NpgsqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        for (int i = 0; i < field_list.Length; i++)
+                        {
+
+                            int kolom = i;// + 1;
+
+                            string field = field_list[i];
+                            string fna = field;
+
+                            Cell cell = sheet.Cells[baris, kolom];
+                            if (fna == "item_no")
+                            {
+                                cell.PutValue(Convert.ToInt64(baris));
+                                continue;
+                            }
+
+                            string ftype = reader.GetDataTypeName(reader.GetOrdinal(field));
+                            string value = "";
+                            if (ftype == "integer")
+                            {
+                                value = (reader.IsDBNull(reader.GetOrdinal(fna)) ? 0 : reader.GetInt64(reader.GetOrdinal(fna))).ToString();
+                            }
+                            else if (ftype.Contains("numeric"))
+                            {
+                                value = reader.IsDBNull(reader.GetOrdinal(fna)) ? "" : reader.GetDouble(reader.GetOrdinal(fna)).ToString();
+                            }
+                            else if (ftype.Contains("timestamp"))
+                            {
+                                value = reader.IsDBNull(reader.GetOrdinal(fna)) ? "" : reader.GetDateTime(reader.GetOrdinal(fna)).ToString("yyyy-MM-dd");
+                            }
+                            else
+                            {
+                                value = reader.IsDBNull(reader.GetOrdinal(fna)) ? "" : reader.GetString(reader.GetOrdinal(fna));
+                            }
+
+                            if (field.Contains("qty"))
+                            {
+                                //Style style = cell.GetStyle();
+                                //style.Custom = "#,##0.0000";
+                                //cell.SetStyle(style);
+                                try
+                                {
+                                    cell.PutValue(Convert.ToInt64(value));
+                                }
+                                catch
+                                {
+                                    try
+                                    {
+                                        cell.PutValue(Convert.ToDouble(value));
+                                    }
+                                    catch
+                                    {
+                                        cell.PutValue(Convert.ToString(value));
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                if (value != "")
+                                {
+                                    //Style style = cell.GetStyle();
+                                    //style.Custom = "#,##0.0000";
+                                    //cell.SetStyle(style);
+                                    cell.PutValue(value.ToUpper().Trim());
+                                }
+                            }
+                        }//for col
+
+                        jmlrec = jmlrec + 1;
+                        baris = baris + 1;
+                    }//while reader.read
+                }//using reader
+                //                }//for(int iloop=0;iloop<2;iloop++)
+            }//using command
+
+            if (jmlrec > 0)
+            {
+                string pdate = DateTime.Now.ToString("yyyyMMdd");
+                Random mnd = new Random();
+                string export_filename_temp = "";
+                int rnd = 0;
+                bool found = true;
+                while (found)
+                {
+                    rnd = mnd.Next(1000, 9999);
+                    export_filename_temp = "OUBD_";
+                    export_filename_temp = pdate + "_" + export_filename_temp + "_temp" + rnd + ".xlsx";
+                    if (System.IO.File.Exists(temppath + export_filename_temp) == false)
+                    {
+                        found = false;
+                    }
+                }
+                Console.WriteLine("Save to Temporary " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                Console.WriteLine("Temp File : " + temppath + export_filename_temp);
+                wb.Save(temppath + export_filename_temp, Aspose.Cells.SaveFormat.Xlsx);
+                Console.WriteLine("Save to Temporary Success " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+
+                string export_filename_export = "outbound_" + pdate + ".xlsx";
+                Console.WriteLine("Export File : " + temppath + export_filename_export);
+                File.Copy(temppath + export_filename_temp, targetpath + export_filename_export, true);
+                Console.WriteLine("Save to Export Success " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+
+            }//jmlrec>0
+
+            sheet.Dispose();
+            wb.Dispose();
+            Console.WriteLine("End Inbound Export " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
             connection.Close();
         }//static Main

@@ -21,3 +21,4 @@ E:\DITO\VS Sources\StockExplorer\StockExplorer\obj\Debug\netcoreapp3.1\StockExpl
 E:\DITO\VS Sources\StockExplorer\StockExplorer\obj\Debug\netcoreapp3.1\StockExplorer.dll
 E:\DITO\VS Sources\StockExplorer\StockExplorer\obj\Debug\netcoreapp3.1\StockExplorer.pdb
 E:\DITO\VS Sources\StockExplorer\StockExplorer\obj\Debug\netcoreapp3.1\StockExplorer.genruntimeconfig.cache
+E:\DITO\VS Sources\StockExplorer\StockExplorer\bin\Debug\netcoreapp3.1\Newtonsoft.Json.dll

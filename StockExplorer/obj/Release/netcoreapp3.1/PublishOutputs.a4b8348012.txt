@@ -5,6 +5,7 @@ E:\DITO\VS Sources\StockExplorer\StockExplorer\bin\Release\netcoreapp3.1\publish
 E:\DITO\VS Sources\StockExplorer\StockExplorer\bin\Release\netcoreapp3.1\publish\StockExplorer.pdb
 E:\DITO\VS Sources\StockExplorer\StockExplorer\bin\Release\netcoreapp3.1\publish\Aspose.Cells.dll
 E:\DITO\VS Sources\StockExplorer\StockExplorer\bin\Release\netcoreapp3.1\publish\Microsoft.Win32.SystemEvents.dll
+E:\DITO\VS Sources\StockExplorer\StockExplorer\bin\Release\netcoreapp3.1\publish\Newtonsoft.Json.dll
 E:\DITO\VS Sources\StockExplorer\StockExplorer\bin\Release\netcoreapp3.1\publish\Npgsql.dll
 E:\DITO\VS Sources\StockExplorer\StockExplorer\bin\Release\netcoreapp3.1\publish\System.Diagnostics.DiagnosticSource.dll
 E:\DITO\VS Sources\StockExplorer\StockExplorer\bin\Release\netcoreapp3.1\publish\System.Drawing.Common.dll

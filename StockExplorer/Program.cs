@@ -4,6 +4,8 @@ using Aspose.Cells;
 using System.Collections.Generic;
 using Npgsql;
 using System.Security.Cryptography;
+using System.Net.Http;
+using Newtonsoft.Json;
 
 namespace StockExporter
 {
@@ -314,6 +316,12 @@ namespace StockExporter
                 File.Copy(temppath + export_filename_temp, targetpath + export_filename_export, true);
                 Console.WriteLine("Save to Export Success " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
+                string targetpath_full = targetpath + export_filename_export;
+
+                FileStream fs = new FileStream(targetpath_full, FileMode.Open, FileAccess.Read);
+                modelAPIStatus aPIStatus = new modelAPIStatus();
+                aPIStatus = UploadImage(targetpath_full, fs);
+
             }//jmlrec>0
 
             sheet.Dispose();
@@ -347,7 +355,7 @@ namespace StockExporter
                 "ON HAND QTY","IN TRANSIT QTY","ALLOCATED QTY","SUSPENSE QTY"
             };
 
-            Console.WriteLine("Start Outbound Export " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            Console.WriteLine("Start Inbound Export " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
             //string fpath = "/Users/tbamir/Downloads/";
 
@@ -481,11 +489,16 @@ namespace StockExporter
                 File.Copy(temppath + export_filename_temp, targetpath + export_filename_export, true);
                 Console.WriteLine("Save to Export Success " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
+                string targetpath_full = targetpath + export_filename_export;
+
+                FileStream fs = new FileStream(targetpath_full, FileMode.Open, FileAccess.Read);
+                modelAPIStatus aPIStatus = new modelAPIStatus();
+                aPIStatus = UploadImage(targetpath_full, fs);
             }//jmlrec>0
 
             sheet.Dispose();
             wb.Dispose();
-            Console.WriteLine("End Outbound Export " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            Console.WriteLine("End Inbound Export " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
             // ==================================
             //          EXPORT OUTBOUND
@@ -514,7 +527,7 @@ namespace StockExporter
                 "REMARK TASK","REMARK ITEM","REMARK APPROVAL",
             };
 
-            Console.WriteLine("Start Inbound Export " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            Console.WriteLine("Start Outbound Export " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
             //string fpath = "/Users/tbamir/Downloads/";
 
@@ -646,18 +659,23 @@ namespace StockExporter
                 File.Copy(temppath + export_filename_temp, targetpath + export_filename_export, true);
                 Console.WriteLine("Save to Export Success " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
+                string targetpath_full = targetpath + export_filename_export;
+
+                FileStream fs = new FileStream(targetpath_full, FileMode.Open, FileAccess.Read);
+                modelAPIStatus aPIStatus = new modelAPIStatus();
+                aPIStatus = UploadImage(targetpath_full, fs);
             }//jmlrec>0
 
             sheet.Dispose();
             wb.Dispose();
-            Console.WriteLine("End Inbound Export " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            Console.WriteLine("End Outbound Export " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
             connection.Close();
         }//static Main
 
-        public void UploadImage(String filetype, string filePath, System.IO.Stream stream)
+        public static modelAPIStatus UploadImage(string filePath, System.IO.Stream stream)
         {
-            var url = @"https:\\10.34.41.11\stock_export\php\";
+            var url = "http://10.34.41.11/stock_export/php/";
             var atoolpage = "receive";
 
             var client = new System.Net.Http.HttpClient();
@@ -667,50 +685,50 @@ namespace StockExporter
 
             //StreamContent scontent = new StreamContent(file.GetStream());
             StreamContent scontent = new StreamContent(stream);
+            scontent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
             scontent.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("form-data")
             {
                 FileName = filePath,// "newimage",
                 Name = "file[]"
             };
-            scontent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
             var multi = new MultipartFormDataContent();
             multi.Add(scontent);
 
-            StringContent studentIdContent = new StringContent(filetype);
-            multi.Add(studentIdContent, "file_type");
+            StringContent studentIdContent = new StringContent("stock");
+            multi.Add(studentIdContent, "datatype");
 
             //var uri = new Uri(string.Format(App.url + "php/index.php?act=ftag&user_id=" + App.userdata.user_id, string.Empty));
-            var uri = new Uri(string.Format(url + atoolpage+".php?act=ftag&user_id=" + App.userdata.user_id + "&token=" + App.userdata.token + "&os=" + Device.RuntimePlatform + "&vrs=" + VersionTracking.CurrentBuild, string.Empty));
-            var response = await client.PostAsync(uri, multi);//.Result;
+            var uri = new Uri(string.Format(url + atoolpage+".php?act=ftag", string.Empty));
+            var response = client.PostAsync(uri, multi).Result;//.Result;
             //var response = await client.PostAsync(new Uri(App.baseUrl + "common1.php?" + strQuery), str);
 
-            response.EnsureSuccessStatusCode();
-            if (response.IsSuccessStatusCode)
+            var placesJson = response.Content.ReadAsStringAsync().Result;
+            //var placesJson = response.Content.ReadAsStringAsync().Result;
+            modelAPIStatus transaction_data = new modelAPIStatus();
+            if (placesJson != "")
             {
-                var placesJson = await response.Content.ReadAsStringAsync();
-                //var placesJson = response.Content.ReadAsStringAsync().Result;
-                modelAPIStatus transaction_data = new modelAPIStatus();
-                if (placesJson != "")
+                try
                 {
-                    try
-                    {
-                        //modelUpload mu = JsonConvert.DeserializeObject<modelUpload>(placesJson);
-                        transaction_data = JsonConvert.DeserializeObject<modelAPIStatus>(placesJson);
-                        //return transaction_data;
-                    }
-                    catch (Newtonsoft.Json.JsonSerializationException ex)
-                    {
-                        transaction_data= null;
-                    }
+                    //modelUpload mu = JsonConvert.DeserializeObject<modelUpload>(placesJson);
+                    transaction_data = JsonConvert.DeserializeObject<modelAPIStatus>(placesJson);
+                    //return transaction_data;
                 }
-                return transaction_data;
+                catch (Newtonsoft.Json.JsonSerializationException ex)
+                {
+                    transaction_data= null;
+                }
             }
-            else
-            {
-                return null;
-            }
+            return transaction_data;
 
         }
+    }
+
+    public class modelAPIStatus
+    {
+        [JsonProperty("CODE")]
+        public string code { get; set; }
+        [JsonProperty("MESSAGE")]
+        public string reason { get; set; }
     }
 }
